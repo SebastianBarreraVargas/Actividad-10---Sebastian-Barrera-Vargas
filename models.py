@@ -50,3 +50,33 @@ class Teacher(User):
 
     def loan_days(self):
         return 14
+
+
+class Guest(User):
+    def __init__(self, name, email):
+        super().__init__(name, email, "invitado")
+
+    def max_loans(self):
+        return 1
+
+    def loan_days(self):
+        return 3
+
+
+class UserFactory:
+    _types = {
+        "estudiante": Student,
+        "docente": Teacher,
+        "invitado": Guest,
+    }
+
+    @staticmethod
+    def create(user_type, name, email):
+        cls = UserFactory._types.get(user_type)
+        if not cls:
+            raise ValueError(f"Tipo de usuario desconocido: {user_type}")
+        return cls(name, email)
+
+    @staticmethod
+    def available_types():
+        return list(UserFactory._types.keys())
