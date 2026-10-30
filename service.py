@@ -7,6 +7,10 @@ class LibraryService:
     def add_observer(self, observer):
         self._observers.append(observer)
 
+    def remove_observer(self, observer):
+        if observer in self._observers:
+            self._observers.remove(observer)
+
     def borrow(self, user, book):
         if not book.available:
             self._notifier.send(user, f"'{book.title}' no esta disponible.")

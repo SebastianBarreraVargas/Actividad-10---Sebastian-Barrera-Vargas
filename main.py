@@ -1,4 +1,4 @@
-from models import Book, UserFactory
+from models import Book, StudentCreator, TeacherCreator, GuestCreator
 from notifiers import ConsoleNotifier, EmailNotifier
 from decorators import TimestampNotifier, UrgentNotifier
 from repository import InMemoryLoanRepository
@@ -16,12 +16,11 @@ def main():
     quijote = Book("Don Quijote", "978-8420412146")
     patterns = Book("Design Patterns", "978-0201633610")
 
-    print("\n[FACTORY METHOD] Creando usuarios con UserFactory:")
-    ana = UserFactory.create("estudiante", "Ana", "ana@umss.edu")
-    luis = UserFactory.create("docente", "Luis", "luis@umss.edu")
-    carlos = UserFactory.create("invitado", "Carlos", "carlos@gmail.com")
-    for u in (ana, luis, carlos):
-        print(f"  -> {u} | max prestamos: {u.max_loans()}, dias: {u.loan_days()}")
+    print("\n[FACTORY METHOD] Creando usuarios con ConcreteCreators (UserCreator):")
+    ana = StudentCreator().register("Ana", "ana@umss.edu")
+    luis = TeacherCreator().register("Luis", "luis@umss.edu")
+    carlos = GuestCreator().register("Carlos", "carlos@gmail.com")
+
 
     loans = InMemoryLoanRepository()
 

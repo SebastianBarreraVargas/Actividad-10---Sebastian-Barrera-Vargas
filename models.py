@@ -63,20 +63,28 @@ class Guest(User):
         return 3
 
 
-class UserFactory:
-    _types = {
-        "estudiante": Student,
-        "docente": Teacher,
-        "invitado": Guest,
-    }
+class UserCreator(ABC):
+    @abstractmethod
+    def create_user(self, name, email):
+        pass
 
-    @staticmethod
-    def create(user_type, name, email):
-        cls = UserFactory._types.get(user_type)
-        if not cls:
-            raise ValueError(f"Tipo de usuario desconocido: {user_type}")
-        return cls(name, email)
+    def register(self, name, email):
+        user = self.create_user(name, email)
+        print(f"  -> {user} | max prestamos: {user.max_loans()}, dias: {user.loan_days()}")
+        return user
 
-    @staticmethod
-    def available_types():
-        return list(UserFactory._types.keys())
+
+class StudentCreator(UserCreator):
+    def create_user(self, name, email):
+        return Student(name, email)
+
+
+class TeacherCreator(UserCreator):
+    def create_user(self, name, email):
+        return Teacher(name, email)
+
+
+class GuestCreator(UserCreator):
+    def create_user(self, name, email):
+        return Guest(name, email)
+

@@ -25,25 +25,42 @@ python main.py
 ## Estructura del Proyecto
 
 ```
-models.py      - Clases Book, User (Student, Teacher, Guest) y UserFactory
+models.py      - Clases Book, User (Student, Teacher, Guest) y jerarquia UserCreator (StudentCreator, TeacherCreator, GuestCreator)
 notifiers.py   - Interfaz Notifier y notificadores ConsoleNotifier, EmailNotifier
 decorators.py  - Decoradores TimestampNotifier y UrgentNotifier
-repository.py  - Interfaz LoanRepository e implementacion InMemoryLoanRepository
+repository.py  - Interfaz LoanRepository e implementacion InMemoryLoanRepository (Patron Repositorio)
 observers.py   - Interfaz BookReturnObserver e implementacion WaitList
-service.py     - Servicio principal LibraryService
-main.py        - Funcion principal con demostracion de todos los patrones
+service.py     - Servicio principal LibraryService (Gestion de prestamos y Subject del Observer)
+main.py        - Funcion principal con demostracion de todos los patrones y flujo completo
 ```
 
 ## Patrones de Diseno Implementados
 
-### Patron Creacional: Factory Method
+### Patron Creacional: Factory Method (GoF)
 
-La clase `UserFactory` en `models.py` centraliza la creacion de usuarios. En lugar de instanciar directamente `Student`, `Teacher` o `Guest`, se usa `UserFactory.create(tipo, nombre, email)` que devuelve la instancia correcta segun el tipo indicado. Esto permite agregar nuevos tipos de usuario registrandolos en el diccionario `_types` sin modificar el codigo que los crea ni el servicio de biblioteca.
+Cumple con la estructura canonica del patron segun la guia de diseno:
+- **Creator abstracto (`UserCreator`)**: declara el metodo de fabricacion abstracto `create_user(name, email)` y contiene la logica comun de registro `register(name, email)`.
+- **ConcreteCreators (`StudentCreator`, `TeacherCreator`, `GuestCreator`)**: cada uno sobreescribe el metodo de fabricacion para instanciar su producto concreto (`Student`, `Teacher`, `Guest`).
+- **Product (`User`) y ConcreteProducts**: definen la interfaz comun de usuario y sus politicas especificas (prestamos maximos y dias permitidos).
 
 ### Patron Estructural: Decorator
 
-En `decorators.py`, la clase `NotifierDecorator` envuelve un `Notifier` existente y le agrega funcionalidad extra sin modificar su codigo. `TimestampNotifier` agrega la hora actual al mensaje antes de delegarlo al notificador envuelto. `UrgentNotifier` marca el mensaje como urgente. Estos decoradores se pueden apilar: por ejemplo, se puede envolver un `EmailNotifier` con `UrgentNotifier` para obtener emails urgentes, o un `ConsoleNotifier` con `TimestampNotifier` para mensajes con hora en consola.
+En `decorators.py`, la clase `NotifierDecorator` envuelve un `Notifier` existente y le agrega funcionalidad extra sin modificar su codigo (principio Abierto/Cerrado):
+- `TimestampNotifier` agrega la hora actual al mensaje antes de delegarlo al notificador envuelto.
+- `UrgentNotifier` antepone la etiqueta `URGENTE:` al mensaje.
+Estos decoradores se pueden apilar dinamicamente (e.g. `UrgentNotifier(EmailNotifier())`).
 
 ### Patron de Comportamiento: Observer
 
-`LibraryService` en `service.py` mantiene una lista de observadores que implementan la interfaz `BookReturnObserver`. Cuando se devuelve un libro mediante `give_back()`, el servicio notifica a todos los observadores registrados llamando a `on_book_returned(book)`. La clase `WaitList` en `observers.py` implementa este observador: los usuarios se agregan a la lista de espera de un libro, y cuando ese libro es devuelto, la lista de espera avisa automaticamente a todos los usuarios que lo estaban esperando.
+`LibraryService` en `service.py` actua como el **Subject** (sujeto observable) y mantiene la lista de observadores con metodos para suscribir (`add_observer`) y cancelar suscripcion (`remove_observer`).
+- **Observer abstracto (`BookReturnObserver`)**: declara el contrato `on_book_returned(book)`.
+- **ConcreteObserver (`WaitList`)**: gestiona los usuarios en cola de espera por libro y, al recibir la notificacion de devolucion, avisa automaticamente a todos los usuarios interesados a traves de su notificador inyectado.
+
+## Arquitectura y Principios de Diseno
+
+- **Arquitectura en Capas**:
+  - **Capa de Datos**: `repository.py` (Patron Repositorio para persistencia de prestamos desacoplada de la base de datos).
+  - **Capa de Dominio / Negocio**: `models.py`, `service.py`, `observers.py`, `notifiers.py`, `decorators.py`.
+  - **Capa de Presentacion / Aplicacion**: `main.py`.
+- **Principio de Inversion de Dependencias (DIP)**: `LibraryService` depende exclusivamente de abstracciones (`LoanRepository`, `Notifier`, `BookReturnObserver`), nunca de implementaciones concretas.
+
