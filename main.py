@@ -67,10 +67,5 @@ def main():
     print("\n--- Luis pide 'Clean Code' ---")
     urgent_service.borrow(luis, clean)
 
-    print("\n" + "=" * 60)
-    print("  FIN DE LA DEMOSTRACION")
-    print("=" * 60)
-
-
 if __name__ == "__main__":
     main()
